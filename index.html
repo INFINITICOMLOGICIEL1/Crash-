@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de l'Avion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000; /* Fond noir */
+            color: white; /* Texte blanc par défaut */
+        }
+        #graph-container {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            margin: 20px auto;
+            border: 2px solid #333;
+            background: #87CEEB; /* Couleur de fond bleu ciel */
+            overflow: hidden;
+        }
+        #plane {
+            position: absolute;
+            font-size: 50px;
+            color: gold; /* Avion couleur or */
+            display: none;
+        }
+        #flame {
+            position: absolute;
+            font-size: 50px;
+            color: red; /* Couleur du feu */
+            display: none;
+            animation: burn 0.5s infinite alternate;
+        }
+        @keyframes burn {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        #start-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #start-button:disabled {
+            background-color: #gray; /* Bouton désactivé en gris */
+            cursor: not-allowed;
+        }
+        #start-button:hover:enabled {
+            background-color: #45a049;
+        }
+        #result {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 24px;
+        }
+        #countdown {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 20px;
+            color: yellow; /* Texte jaune pour le compte à rebours */
+        }
+        #number-counter {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: yellow; /* Couleur jaune pour le numéro de compte */
+        }
+        .grid-number {
+            position: absolute;
+            color: yellow; /* Couleur jaune pour les numéros de la grille */
+            font-size: 12px;
+        }
+        .vertical-number {
+            left: -20px;
+        }
+        .horizontal-number {
+            bottom: -20px;
+        }
+        .cloud {
+            position: absolute;
+            font-size: 30px;
+            color: white;
+            opacity: 0.8;
+            animation: float 5s linear infinite;
+        }
+        @keyframes float {
+            0% { left: 100%; }
+            100% { left: -100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="graph-container">
+        <div id="plane">✈️</div>
+        <div id="flame">🔥</div>
+        <div id="number-counter">0.00</div> <!-- Compteur de numéro -->
+        <div class="cloud" style="top: 50px; left: 100px;">☁️</div>
+        <div class="cloud" style="top: 100px; left: 200px;">☁️</div>
+        <div class="cloud" style="top: 150px; left: 300px;">☁️</div>
+        <div class="grid-number vertical-number" style="top: 0; left: 0;">300</div>
+        <div class="grid-number vertical-number" style="top: 100px; left: 0;">200</div>
+        <div class="grid-number vertical-number" style="top: 200px; left: 0;">100</div>
+        <div class="grid-number horizontal-number" style="bottom: 0; left: 0;">1</div>
+        <div class="grid-number horizontal-number" style="bottom: 0; left: 100px;">2</div>
+        <div class="grid-number horizontal-number" style="bottom: 0; left: 200px;">3</div>
+        <div class="grid-number horizontal-number" style="bottom: 0; left: 300px;">4</div>
+    </div>
+    <button id="start-button">Prochain jeu</button>
+    <div id="result"></div>
+    <div id="countdown"></div>
+
+    <script>
+        const plane = document.getElementById('plane');
+        const flame = document.getElementById('flame');
+        const startButton = document.getElementById('start-button');
+        const resultDisplay = document.getElementById('result');
+        const countdownDisplay = document.getElementById('countdown');
+        const numberCounter = document.getElementById('number-counter');
+
+        let countdown;
+        let isGameActive = false;
+
+        function getRandomNumber() {
+            // 95% de chance d'obtenir un nombre entre 1 et 5, 5% de chance d'obtenir un nombre entre 6 et 50
+            const probability = Math.random();
+            if (probability <= 0.95) {
+                return (Math.random() * 4 + 1).toFixed(2); // entre 1.00 et 5.00
+            } else {
+                return (Math.random() * 45 + 5).toFixed(2); // entre 5.00 et 50.00
+            }
+        }
+
+        startButton.addEventListener('click', () => {
+            if (isGameActive) return;
+            isGameActive = true;
+
+            plane.style.display = 'block';
+            flame.style.display = 'none';
+            plane.style.left = '0px';
+            plane.style.bottom = '0px';
+            resultDisplay.textContent = '';
+            countdownDisplay.textContent = '';
+            numberCounter.textContent = '0.00';
+
+            const targetPositionX = 320;  // L'avion volera jusqu'à cette position
+            const targetPositionY = Math.random() * 200;
+            const randomNumber = getRandomNumber();
+            const duration = 3000;  // 3 secondes
+            const increment = (randomNumber / duration) * 50;  // Incrémentation du compteur en fonction du temps
+
+            let elapsedTime = 0;
+            let currentNumber = 0;
+
+            const animation = setInterval(() => {
+                let planePositionX = parseInt(plane.style.left);
+                let planePositionY = Math.ceil((planePositionX / targetPositionX) * 200);
+
+                if (elapsedTime < duration) {
+                    plane.style.left = (planePositionX + 2) + 'px';
+                    plane.style.bottom = planePositionY + 'px';
+                    elapsedTime += 50;
+                    currentNumber += increment;
+                    numberCounter.textContent = currentNumber.toFixed(2);
+                } else {
+                    clearInterval(animation);
+                    plane.style.display = 'none';
+                    flame.style.left = plane.style.left;
+                    flame.style.bottom = plane.style.bottom;
+                    flame.style.display = 'block';
+                    numberCounter.textContent = randomNumber;  // Affiche le numéro gagnant directement
+                    setTimeout(() => {
+                        resultDisplay.textContent = `Le numéro gagnant est : ${randomNumber}`;
+                        startButton.disabled = true;
+                        startCooldown();
+                    }, 500);  // Affichage du résultat après 0.5 seconde
+                }
+            }, 50);
+        });
+
+        function startCooldown() {
+            countdown = 280;  // Décompte de 280 secondes
+            countdownDisplay.textContent = `Attendez ${countdown} secondes...`;
+            const interval = setInterval(() => {
+                countdown--;
+                countdownDisplay.textContent = `Attendez ${countdown} secondes...`;
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    startButton.disabled = false;
+                    countdownDisplay.textContent = '';
+                    isGameActive = false;
+                }
+            }, 1000);
+        }
+    </script>
+
+</body>
+</html>
